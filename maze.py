@@ -5,6 +5,17 @@ import pygame
 from pygame import Rect
 import random
 
+class Node:
+    def __init__(self,id) -> None:
+        self.neighbours=[]
+        self.dist=[]
+        self.id=id
+
+    def add_neighbour(self,node,dist):
+        self.neighbours.append(node)
+        self.dist.append(dist)
+        node.neighbours.append(self)
+        node.dist.append(dist)
 class Maze:
     def isWall(self,row,col):
         tile= self.maze[row][col]
@@ -12,6 +23,7 @@ class Maze:
             return True
         return False
         
+    
 
     def __init__(self) -> None:
         self.maze = []
@@ -19,7 +31,8 @@ class Maze:
         self.width = 0
         self.mona1 = [0, 0]
         self.mona2 = [0, 0]
-        
+        self.nodes=[]
+
     def make_maze(self, height, width):
         for i in range(2*height+1):
             if i == 0 or i == 2*height:
@@ -52,6 +65,31 @@ class Maze:
                 for j in range(2, 2*width+1, 2):
                     if random.randint(0, 100) <= wall_density:
                         self.maze[i][j] = WALL_UNEXPLORED
+
+    def make_maze_graph(self):
+        icounter=0
+        for i in range(1,2*self.height,2):
+
+            self.nodes.append([])
+            jcounter=0
+            for j in range(1,2*self.width,2):
+                node=Node(icounter*self.height+jcounter)
+                #Add left neighbour
+
+                if jcounter!=0:
+                    if self.maze[i][j-1]!=WALL_UNEXPLORED:
+                        node.add_neighbour(self.nodes[icounter][jcounter-1],1)
+                    else:
+                        node.add_neighbour(self.nodes[icounter][jcounter-1],-1)
+                #Add top neighbour
+                if icounter!=0:
+                    if self.maze[i-1][j]!=WALL_UNEXPLORED:
+                        node.add_neighbour(self.nodes[icounter-1][jcounter],1)
+                    else:
+                        node.add_neighbour(self.nodes[icounter-1][jcounter],-1)
+                self.nodes[icounter].append(node)
+                jcounter+=1
+            icounter+=1
 
     def print(self):
         for row in self.maze:
