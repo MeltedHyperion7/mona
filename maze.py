@@ -27,7 +27,7 @@ class Maze:
             elif i % 2 == 0:
                 self.maze.append([WALL_UNEXPLORED if j == 0 or j == 2*width else UNKNOWN for j in range(2*width + 1)])
             else:
-                self.maze.append([(WALL_UNEXPLORED if j == 0 or j == 2*width else UNKNOWN if j % 2 == 0 else PATH) for j in range(2*width + 1)])
+                self.maze.append([(WALL_UNEXPLORED if j == 0 or j == 2*width else UNKNOWN if j % 2 == 0 else PATH_UNEXPLORED) for j in range(2*width + 1)])
 
         self.maze[1][1] = MONA1
         self.maze[-2][-2] = MONA2
@@ -90,8 +90,10 @@ class Maze:
                         pygame.draw.rect(screen, MONA2_COLOR, Rect(x, y, CELL_SIZE, CELL_SIZE))
                     if self.maze[row][col] == UNKNOWN:
                         pygame.draw.rect(screen, BLACK, Rect(x, y, WALL_SIZE, CELL_SIZE))
-                    if self.maze[row][col] == PATH:
-                        pygame.draw.rect(screen, PATH_COLOR, Rect(x, y, CELL_SIZE, CELL_SIZE))
+                    if self.maze[row][col] == PATH_EXPLORED:
+                        pygame.draw.rect(screen, PATH_EXPLORED_COLOR, Rect(x, y, CELL_SIZE, CELL_SIZE))
+                    if self.maze[row][col] == PATH_UNEXPLORED:
+                        pygame.draw.rect(screen, PATH_UNEXPLORED_COLOR, Rect(x, y, CELL_SIZE, CELL_SIZE))
                     if self.maze[row][col] == WALL_UNEXPLORED:
                         pygame.draw.rect(screen, WALL_COLOR, Rect(x, y, WALL_SIZE, CELL_SIZE))
         
@@ -165,23 +167,30 @@ class Maze:
             raise Exception(reason)
         
         if direction == DIR_UP:
-            self.maze[mona_coords[0]][mona_coords[1]] = PATH
+            self.maze[mona_coords[0]][mona_coords[1]] = PATH_EXPLORED
             mona_coords[0] -= 2
             self.maze[mona_coords[0]][mona_coords[1]] = mona
         elif direction == DIR_DOWN:
-            self.maze[mona_coords[0]][mona_coords[1]] = PATH
+            self.maze[mona_coords[0]][mona_coords[1]] = PATH_EXPLORED
             mona_coords[0] += 2
             self.maze[mona_coords[0]][mona_coords[1]] = mona
         elif direction == DIR_LEFT:
-            self.maze[mona_coords[0]][mona_coords[1]] = PATH
+            self.maze[mona_coords[0]][mona_coords[1]] = PATH_EXPLORED
             mona_coords[1] -= 2
             self.maze[mona_coords[0]][mona_coords[1]] = mona
         elif direction == DIR_RIGHT:
-            self.maze[mona_coords[0]][mona_coords[1]] = PATH
+            self.maze[mona_coords[0]][mona_coords[1]] = PATH_EXPLORED
             mona_coords[1] += 2
             self.maze[mona_coords[0]][mona_coords[1]] = mona
                 
     def available_directions(self, mona):
         d = [direction for direction in [DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT] if self.can_move(mona, direction)[0]]
-        print(f"Mona: {mona}. Direcitons: {d}")
         return d
+
+    def is_explored(self):
+        for row in range(1, 2*self.height+1, 2):
+            for col in range(1, 2*self.width+1, 2):
+                if self.maze[row][col] == PATH_UNEXPLORED:
+                    return False
+                
+        return True
