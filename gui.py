@@ -5,8 +5,8 @@ import pygame
 import random
 
 if __name__ == '__main__':
-    height = 3
-    width = 3
+    height = 7
+    width = 7
 
     pygame.init()
     clock = pygame.time.Clock()
