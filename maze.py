@@ -33,6 +33,18 @@ class Maze:
         self.mona2 = [0, 0]
         self.nodes=[]
 
+    def get_shortest_distance(source:Node,destination:Node,visited:[]):
+        if destination in source.neighbours:
+            return source.dist[source.neighbours.index(destination)]
+        else:
+            minimum=10000
+            for neighbour in source.neighbours:
+                if neighbour not in visited:
+                    visited.append(neighbour)
+                    x=get_shortest_distance(neighbour,destination,visited)
+                    if x<minimum:
+                        minimum=x
+            return minimum
 
     def is_maze_correct(self):
         accessible = {}
@@ -119,6 +131,11 @@ class Maze:
                 self.nodes[icounter].append(node)
                 jcounter+=1
             icounter+=1
+
+    def init_graph(self):
+        step_weight=self.height
+        for node_line,i in enumerate(self.nodes):
+            for node, j in enumerate(node_line):
 
     def print(self):
         for row in self.maze:
