@@ -130,9 +130,15 @@ class Maze:
         with open(filename, 'wb') as f:
             pickle.dump(self.maze, f)
 
-    def load(self, filename):
+    def load(self, filename, height, width):
         with open(filename, 'rb') as f:
             self.maze = pickle.load(f)
+            
+        self.height = height
+        self.width = width
+
+        self.mona1 = [1, 1]
+        self.mona2 = [2*height-1, 2*width-1]
 
     def draw(self, screen):
         screen.fill(WHITE)
