@@ -19,6 +19,7 @@ if __name__ == '__main__':
 
     running = True
     time_since_move = 0
+    total_moves=0
 
     while running:
         time_delta = clock.tick(60)
@@ -28,6 +29,7 @@ if __name__ == '__main__':
             maze.move_mona(MONA1, random.choice(maze.available_directions(MONA1)))
             maze.move_mona(MONA2, random.choice(maze.available_directions(MONA2)))
             time_since_move = 0
+            total_moves+=2
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
