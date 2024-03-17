@@ -97,8 +97,7 @@ class MonaUno:
 
 
 class Mona:
-    WALL_THRESH = 995  # Woah! So high!! These gummies hit different
-    WALL_THRESH = 985  # Woah! So high!! These gummies hit different
+    WALL_THRESH = 990  # Woah! So high!! These gummies hit different
 
     def __init__(self, uno: MonaUno, id_: int) -> None:
         self.uno: MonaUno = uno

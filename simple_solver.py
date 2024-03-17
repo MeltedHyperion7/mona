@@ -99,6 +99,7 @@ class SimpleSolver(Solver):
                 self.mona1_last_action = mona_action = self.move_next(MONA1)
             else:
                 target = self.get_next_explore_target(MONA1)
+                print(f"MONA1 target: {target}")
                 if self.has_path(MONA1):
                     self.mona1_last_action = mona_action = self.move_next(MONA1)
                 # else:
@@ -108,6 +109,7 @@ class SimpleSolver(Solver):
                 self.mona2_last_action = mona_action = self.move_next(MONA2)
             else:
                 target = self.get_next_explore_target(MONA2)
+                print(f"MONA2 target: {target}")
                 if self.has_path(MONA2):
                     self.mona2_last_action = mona_action = self.move_next(MONA2)
                 # else:

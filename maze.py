@@ -289,7 +289,7 @@ class Maze:
                 elif direction == DIR_RIGHT and self.maze[mona_coords[0]][mona_coords[1]+1] == UNKNOWN:
                     self.maze[mona_coords[0]][mona_coords[1]+1] = CLEAR
 
-        self.print()
+        # self.print()
 
     def update_walls_virt(self, mona):
         mona_coords = self.get_coords(mona)

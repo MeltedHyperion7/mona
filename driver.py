@@ -79,13 +79,24 @@ class MONA:
                 self.mona.move_backward()
         elif direction==DIR_RIGHT:
             if self.orientation==DIR_DOWN:
-                self.mona.move_right()
-            elif self.orientation==DIR_UP:
                 self.mona.move_left()
+            elif self.orientation==DIR_UP:
+                self.mona.move_right()
             else:
                 self.mona.move_backward()
         
+        print("here")
         self.orientation = direction
+
+    def rotate_find_walls(self):
+        counts = [] * 4
+        for i in range(4):
+            while self.mona.busy:
+                time.sleep(0.2)
+
+
+            self.mona.turn_right_90()
+
         
 def init():
    
@@ -106,41 +117,51 @@ monas=init()
 maze=Maze()
 maze.make_maze(5, 5)
 solver=InterruptSolver(maze)
-mona1=MONA(MONA1,DIR_RIGHT,monas[0])
-mona2=MONA(MONA2,DIR_LEFT,monas[1])
+mona1=MONA(0,DIR_RIGHT,monas[0])
+mona2=MONA(1,DIR_LEFT,monas[1])
 
 DELAY = 0.2
 
 def execute_Mona(id, mona:MONA):
     while not mona.mona.busy:
         time.sleep(0.2)
+
+        # mona.face_towards(DIR_DOWN)
+
+        # time.sleep(0.5)
+
+        # mona.face_towards(DIR_RIGHT)
+        # continue
+
         #If on unexplored cell
         #explore cell && update walls
         directions = []
         # mona.mona.take_ir_capture()
-        mona_coords = solver.maze.get_coords(mona.id)
+        mona_coords = solver.maze.get_coords(mona.id+1)
         print(mona.mona.state.ir)
+        # while True:
+
         print(mona.mona.ir_capture)
-        print(f'MONA{mona.id}. Coordinates: {solver.expanded_to_grid_coords(mona_coords)}. orientation: {mona.orientation}')
+        print(f'MONA{mona.id+1}. Coordinates: {solver.expanded_to_grid_coords(mona_coords)}. orientation: {mona.orientation}')
         if mona.mona.wall_left:
             directions.append(mona.conver_direction(DIR_LEFT))
-            # solver.update_walls(mona.id,mona.conver_direction(DIR_LEFT))
+            # solver.update_walls(mona.id+1,mona.conver_direction(DIR_LEFT))
         if mona.mona.wall_right:
             directions.append(mona.conver_direction(DIR_RIGHT))
-            # solver.update_walls(mona.id,mona.conver_direction(DIR_RIGHT))
+            # solver.update_walls(mona.id+1,mona.conver_direction(DIR_RIGHT))
         if mona.mona.wall_front:
             directions.append(mona.conver_direction(DIR_UP))
-            # solver.update_walls(mona.id,mona.conver_direction(DIR_UP))
-        solver.update_walls(mona.id, directions)
-        print(f'Mona{mona.id} sees {directions}')
+            # solver.update_walls(mona.id+1,mona.conver_direction(DIR_UP))
+        solver.update_walls(mona.id+1, directions)
+        print(f'Mona{mona.id+1} sees {directions}')
         #Get next cell to move
-        cmd = solver.solve(mona.id)
-        print(f'Mona {mona.id} command: {cmd}')
-        if cmd is None:
-            solver.maze.print()
-            quit()
+        cmd = solver.solve(mona.id+1)
+        print(f'Mona {mona.id+1} command: {cmd}')
+        if cmd is not None:
+            mona.face_towards(cmd)
+        else:
+            solver.solve(mona.id+1)
         #Turn to face the cell
-        mona.face_towards(cmd)
         #Move in the cell       
         # mona.mona.move_forward()
         #Rest
