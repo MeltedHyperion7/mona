@@ -223,6 +223,26 @@ class Maze:
         d = [direction for direction in [DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT] if self.can_move_from_tile(coords, direction, allow_mona_clash=allow_mona_clash)[0]]
         return d
 
+    def available_tiles_from_tile(self, coords, allow_mona_clash=False):
+        row, col = coords
+        available_directions = self.available_directions_from_tile(coords, allow_mona_clash=allow_mona_clash)
+        available_cells = []
+        for direction in available_directions:
+            if direction == DIR_UP:
+                available_cells.append((row-2, col))
+            elif direction == DIR_DOWN:
+                available_cells.append((row+2, col))
+            elif direction == DIR_LEFT:
+                available_cells.append((row, col-2))
+            elif direction == DIR_RIGHT:
+                available_cells.append((row, col+2))
+
+        return available_cells
+    
+    def available_tiles(self, mona, allow_mona_clash=False):
+        mona_coords = self.mona1 if mona == MONA1 else self.mona2
+        return self.available_tiles_from_tile(mona_coords, allow_mona_clash=allow_mona_clash)
+
     def is_explored(self):
         for row in range(1, 2*self.height+1, 2):
             for col in range(1, 2*self.width+1, 2):

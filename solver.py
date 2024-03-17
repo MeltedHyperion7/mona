@@ -18,21 +18,36 @@ class Node:
 class Solver:
     def __init__(self, maze: Maze) -> None:
         self.maze = maze
-        self.nodes=[]
-        self.visited_ids=[]
         self.height = maze.height
         self.width = maze.width
-        self.distance_matrix = [[((0, None) if n1 == n2 else (float('inf'), None)) for n2 in range(self.height*self.width)] for n1 in range(self.height*self.width)]
-        self.visited_ids=[]
-        self.init_graph()
-        self.mona1_target=None
-        self.mona2_target=None
+        self.distance_matrix = [[(0 if n1 == n2 else float('inf')) for n2 in range(self.height*self.width)] for n1 in range(self.height*self.width)]
+        self.visited_ids = []
+        self.mona1_target = None
+        self.mona2_target = None
+        self.mona1_path = []
+        self.mona2_path = []
+        self.path=[{},{}]
 
     def get_matrix_index(self, row, col):
         return row * self.width + col
     
     def get_coords(self, index):
         return divmod(index, self.width)
+
+    def index_to_expanded_coords(self, index):
+        row, col = self.get_coords(index)
+
+        return 2*row + 1, 2*col + 1
+    
+    def expanded_to_grid_coords(self, expanded_coords):
+        row, col = expanded_coords
+
+        return row // 2, col // 2
+
+    def expanded_to_index(self, expanded_coords):
+        row, col = self.expanded_to_grid_coords(expanded_coords)
+
+        return self.get_matrix_index(row, col)
     
     def get_mona_index(self, mona):
         if mona == MONA1:
@@ -50,102 +65,69 @@ class Solver:
         else:
             return DIR_LEFT
 
-    def get_shortest_distance(self, source:Node, destination:Node, visited: [Node]):
-        if destination in source.neighbours:
-            return source.dist[source.neighbours.index(destination)]
+    #@param min_time -minimum window time
+    #@param max_dist -the minimum distance to the destination, which we should not exceed because we would already be on a suboptimal path
+    def get_shortest_path(self, source_id, destination_id, visited, time, min_time, mona):
+        # if time>min_dist:
+        #     return 10000,[]
+        
+        current_path = []
+        other_mona = (mona + 1) % 2
+        other_mona_path = self.mona2_path if mona == MONA1 else self.mona1_path
+        available_tiles = [self.expanded_to_index(tile) for tile in self.maze.available_tiles_from_tile(self.index_to_expanded_coords(source_id))]
+        if destination_id in available_tiles:
+            return self.distance_matrix[source_id][destination_id], [self.get_coords(destination_id)]
         else:
-            minimum=10000
-            for neighbour in source.neighbours:
+            minimum = 10000
+            for neighbour in available_tiles:
                 if neighbour not in visited:
                     visited.append(neighbour)
-                    x = self.get_shortest_distance(neighbour,destination,visited)
-                    if x<minimum:
-                        minimum=x
-            return minimum
+                    neighbour_coords = self.get_coords(neighbour)
+
+                    if neighbour_coords not in other_mona_path or abs(len(other_mona_path) - other_mona_path.index(neighbour_coords) - time - 1) >= min_time:
+                        x, path_ending = self.get_shortest_path(neighbour, destination_id, visited, time+1, min_time, mona)
+                        if x < minimum:
+                            minimum = x
+                            current_path = [neighbour_coords]
+                            current_path.extend(path_ending)
+
+            return minimum, current_path
         
-    def make_maze_graph(self):
-        icounter=0
-        for i in range(1,2*self.height,2):
-
-            self.nodes.append([])
-            jcounter=0
-            for j in range(1,2*self.width,2):
-                node=Node(icounter*self.height+jcounter)
-                #Add left neighbour
-
-                if jcounter!=0:
-                    if self.maze[i][j-1]!=WALL_UNEXPLORED:
-                        node.add_neighbour(self.nodes[icounter][jcounter-1],1)
-                    else:
-                        node.add_neighbour(self.nodes[icounter][jcounter-1],-1)
-                #Add top neighbour
-                if icounter!=0:
-                    if self.maze[i-1][j]!=WALL_UNEXPLORED:
-                        node.add_neighbour(self.nodes[icounter-1][jcounter],1)
-                    else:
-                        node.add_neighbour(self.nodes[icounter-1][jcounter],-1)
-                self.nodes[icounter].append(node)
-                jcounter += 1
-            icounter += 1
-
-    def init_graph(self):
-        # step_weight=self.height
-        # for mona in monas:
-        for node_line,i in enumerate(self.nodes):
-            for node, j in enumerate(node_line):
-                    for x in range(len(node.dist)):
-                        node.dist[x]=float("inf")
-
-    # def update_shortest_paths(self, mona, row, col):
-    def update_shortest_paths(self, mona):
-        available_directions = self.maze.available_directions(mona)
-        print(f'MONA{mona}, available directions: {available_directions}')
-
+    def update_distance_matrix(self, mona):
         row, col = self.maze.get_coords(mona)
         mona_index = self.get_matrix_index(row, col)
         self.visited_ids.append(mona_index)
-        available_cells = []
-        for direction in available_directions:
-            if direction == DIR_UP:
-                available_cells.append((row-1, col))
-            if direction == DIR_DOWN:
-                available_cells.append((row+1, col))
-            if direction == DIR_LEFT:
-                available_cells.append((row, col-1))
-            if direction == DIR_RIGHT:
-                available_cells.append((row, col+1))
+        available_tiles = [(tile[0] // 2, tile[1] // 2) for tile in self.maze.available_tiles(mona, allow_mona_clash=True)]
 
-        for i, available_cell in enumerate(available_cells):
-            self.distance_matrix[mona_index][self.get_matrix_index(available_cell[0], available_cell[1])] = (1, available_directions[i])
-            self.distance_matrix[self.get_matrix_index(available_cell[0], available_cell[1])][mona_index] = (1, self.opposite_direction(available_directions[i]))
+        for available_tile in available_tiles:
+            self.distance_matrix[mona_index][self.get_matrix_index(available_tile[0], available_tile[1])] = 1
+            self.distance_matrix[self.get_matrix_index(available_tile[0], available_tile[1])][mona_index] = 1
 
-        for i, available_cell in enumerate(available_cells):
-            available_cell_index = self.get_matrix_index(available_cell[0], available_cell[1])
+        for available_tile in available_tiles:
+            available_tile_index = self.get_matrix_index(available_tile[0], available_tile[1])
 
             for j in range(self.height*self.width):
-                if  self.distance_matrix[available_cell_index][j][0] > self.distance_matrix[mona_index][j][0] + 1:
-                    self.distance_matrix[available_cell_index][j] = (self.distance_matrix[mona_index][j][0] + 1, self.opposite_direction(available_directions[i]))
+                if self.distance_matrix[available_tile_index][j] > self.distance_matrix[mona_index][j] + 1:
+                    self.distance_matrix[available_tile_index][j] = self.distance_matrix[mona_index][j] + 1
+                    self.distance_matrix[j][available_tile_index] = self.distance_matrix[mona_index][j] + 1
                 
-        # for node_line in self.nodes:
-        #     for node in node_line:
-        #         if node.id not in self.visited_ids:
-        #             self.distance_matrix[row][col] = self.get_shortest_distance(self.nodes[row][col])
+    def move_next(self, mona, next):
+        r, c = next
+        monar, monac = self.maze.get_coords(mona)
 
-    def move_to(self, mona, r, c):
-        monar,monac=self.maze.get_coords(mona)
-        if monar>r:
+        if monar > r:
             self.maze.move_mona(mona, DIR_UP)
-        elif monar<r:
+        elif monar < r:
             self.maze.move_mona(mona, DIR_DOWN)
-        if monac>c:
+        if monac > c:
             self.maze.move_mona(mona, DIR_LEFT)
-        elif monac<c:
+        elif monac < c:
             self.maze.move_mona(mona, DIR_RIGHT)
 
     def pretty_print_distances(self, distances):
         for i in range(self.height):
             for j in range(self.width):
-                print('i' if distances[self.get_matrix_index(i,j)][0] == float('inf') else distances[self.get_matrix_index(i,j)][0], end=" ")
+                print('i' if distances[self.get_matrix_index(i,j)] == float('inf') else distances[self.get_matrix_index(i,j)], end=" ")
             print()
 
     def get_next_explore_target(self, mona): 
@@ -154,41 +136,66 @@ class Solver:
         mona_index = self.get_mona_index(mona)
         other_mona_target = self.mona2_target if mona == MONA1 else self.mona1_target
 
-        print(f'We({mona}) should not target {other_mona_target}')
-        for node_id in range(self.height**2):
-            if node_id != mona_index and node_id not in self.visited_ids and node_id!=other_mona_target:
-                dist = self.distance_matrix[self.get_mona_index(mona)][node_id][0]
+        best_node = None
+        for node_id in range(self.height*self.width):
+            if node_id != mona_index and node_id not in self.visited_ids and node_id != other_mona_target:
+                dist = self.distance_matrix[mona_index][node_id]
                 if dist < min_dist_to_travel:
                     best_node = node_id
-        
 
+        print(f'MONA{mona}:')
         self.pretty_print_distances(self.distance_matrix[self.get_mona_index(mona)])
-        if mona==MONA1:
-            self.mona1_target=best_node
-        if mona==MONA2:
-            self.mona2_target=best_node
+
+        if best_node == None:
+            return None
+            
+        _, path = self.get_shortest_path(mona_index, best_node, [], 0, 2, mona)
+        print(f"best_node: {best_node}. path: {path}")
+        self.path = [{}, {}]
+
+        # allows poping to get next item
+        path.reverse()
+
+        if mona == MONA1:
+            self.mona1_target = best_node
+            self.mona1_path = path
+        if mona == MONA2:
+            self.mona2_target = best_node
+            self.mona2_path = path
+
         return best_node
     
-    def get_next_step_to(self, mona, target_index):
-        mona_index = self.get_mona_index(mona)
-
-        print(f'For mona {mona} we are targeting {self.get_coords(target_index)}')
-        step = self.distance_matrix[mona_index][target_index][1]
-
-        print(f'MONA{mona}, next direction: {step}')
-
-        return step
+    def has_path(self, mona):
+        return len(self.mona1_path) > 0 if mona == MONA1 else len(self.mona2_path) > 0
 
     def solve(self):
         #Explore Current cell & shortest distances & paths to every unexplored cell
         if self.get_mona_index(MONA1) not in self.visited_ids:
-            self.update_shortest_paths(MONA1)
+            self.update_distance_matrix(MONA1)
         if self.get_mona_index(MONA2) not in self.visited_ids:
-            self.update_shortest_paths(MONA2)
+            self.update_distance_matrix(MONA2)
+
+        if self.has_path(MONA1):
+            self.move_next(MONA1, self.mona1_path.pop())
+        else:
+            target = self.get_next_explore_target(MONA1)
+            if target is not None:
+                self.move_next(MONA1, self.mona1_path.pop())
+            else:
+                print(f"No target for MONA1")
+                
+        if self.has_path(MONA2):
+            self.move_next(MONA2, self.mona2_path.pop())
+        else:
+            target = self.get_next_explore_target(MONA2)
+            if target is not None:
+                self.move_next(MONA2, self.mona2_path.pop())
+            else:
+                print(f"No target for MONA2")
 
         #Move one more step towards the closes unexplored cell
-        self.maze.move_mona(MONA1, self.get_next_step_to(MONA1, self.get_next_explore_target(MONA1)))
-        self.maze.move_mona(MONA2, self.get_next_step_to(MONA2, self.get_next_explore_target(MONA2)))
+        # self.maze.move_mona(MONA1, self.get_next_step_to(MONA1, self.get_next_explore_target(MONA1)))
+        # self.maze.move_mona(MONA2, self.get_next_step_to(MONA2, self.get_next_explore_target(MONA2)))
         
 
         
