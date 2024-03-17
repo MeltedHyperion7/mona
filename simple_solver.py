@@ -9,15 +9,33 @@ class SimpleSolver(Solver):
         current_tile = source_id
         current_distance = self.distance_matrix[current_tile][destination_id]
 
+        stop = False
         while current_distance > 0:
             available_tiles = [self.expanded_to_index(tile) for tile in self.maze.available_tiles_from_tile(self.index_to_expanded_coords(current_tile), allow_mona_clash=True)]
 
+            found = False
             for available_tile in available_tiles:
                 if self.distance_matrix[available_tile][destination_id] < current_distance:
                     current_path.append(self.get_coords(available_tile))
                     current_tile = available_tile
                     current_distance = self.distance_matrix[available_tile][destination_id]
+                    found = True
                     break
+
+            if not stop:
+                if found:
+                    print(f'found: {source_id} -> {destination_id}. available: {available_tiles}')
+                    print(source_id)
+                    print(destination_id)
+                else:
+                    print(source_id)
+                    print(destination_id)
+                    print(current_distance)
+                    print(available_tiles)
+                    print('Not found!')
+                    self.maze.print()
+                    stop = True
+                    # self.pretty_print_distances(self.distance_matrix[self.get_mona_index(MONA2)])
 
         return len(current_path), current_path
 
@@ -98,13 +116,15 @@ class SimpleSolver(Solver):
             return None
 
     def update_walls(self, mona, walls):
-        self.maze.update_walls(self, mona, walls)
+        self.maze.update_walls(mona, walls)
 
     def solve(self, mona):
-        if self.get_mona_index(MONA1) not in self.visited_ids:
-            self.update_distance_matrix(MONA1)
-        if self.get_mona_index(MONA2) not in self.visited_ids:
-            self.update_distance_matrix(MONA2)
+        # if self.get_mona_index(MONA1) not in self.visited_ids:
+        # if self.get_mona_index(MONA2) not in self.visited_ids:
+        # self.update_distance_matrix(MONA1)
+        # self.update_distance_matrix(MONA2)
+        self.maze.print()
+        self.update_distance_matrix(mona)
 
         mona_action = None
 

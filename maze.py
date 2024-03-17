@@ -144,9 +144,9 @@ class Maze:
     def can_move_from_tile(self, coords, direction, mona=None, allow_mona_clash=False): 
         if direction == DIR_UP:
             if coords[0] - 2 > 0:
-                # if self.maze[coords[0] - 1] == UNKNOWN:
-                #     return False, f"Moving UP through UNKNOWN. Mona: {mona}. Coordinates: {coords}"
-                if self.isWall(coords[0] - 1, coords[1]):
+                if self.maze[coords[0] - 1] == UNKNOWN:
+                    return False, f"Moving UP through UNKNOWN. Mona: {mona}. Coordinates: {coords}"
+                elif self.isWall(coords[0] - 1, coords[1]):
                     return False, f"Moving UP through WALL. Mona: {mona}. Coordinates: {coords}"
                 elif not allow_mona_clash and self.maze[coords[0] - 2][coords[1]] in [MONA1, MONA2]:
                     return False, f"Moving UP crashed into other mona. Mona: {mona}. Coordinates: {coords}"
@@ -158,7 +158,7 @@ class Maze:
                 
         elif direction == DIR_DOWN:
             if coords[0] + 2 < 2 * self.height + 1:
-                if self.maze[coords[0] + 1] == UNKNOWN:
+                if self.maze[coords[0] + 1][coords[1]] == UNKNOWN:
                     return False, f"Moving DOWN through UNKNOWN. Mona: {mona}. Coordinates: {coords}"
                 elif self.isWall(coords[0]+1,coords[1]):
                     return False, f"Moving DOWN through WALL. Mona: {mona}. Coordinates: {coords}"
@@ -171,7 +171,7 @@ class Maze:
                 return False, f"Moving DOWN out of bounds. Mona: {mona}. Coordinates: {coords}"
         elif direction == DIR_LEFT:
             if coords[1] - 2 > 0:
-                if self.maze[coords[1] - 1] == UNKNOWN:
+                if self.maze[coords[0]][coords[1] - 1] == UNKNOWN:
                     return False, f"Moving LEFT through UNKNOWN. Mona: {mona}. Coordinates: {coords}"
                 elif self.isWall(coords[0],coords[1]-1):
                     return False, f"Moving LEFT through WALL. Mona: {mona}. Coordinates: {coords}"
@@ -184,7 +184,7 @@ class Maze:
                 return False, f"Moving LEFT out of bounds. Mona: {mona}. Coordinates: {coords}"
         elif direction == DIR_RIGHT:
             if coords[1] + 2 < 2*self.width + 1:
-                if self.maze[coords[1] + 1] == UNKNOWN:
+                if self.maze[coords[0]][coords[1] + 1] == UNKNOWN:
                     return False, f"Moving RIGHT through UNKNOWN. Mona: {mona}. Coordinates: {coords}"
                 elif self.isWall(coords[0],coords[1]+1):
                     return False, f"Moving RIGHT through WALL. Mona: {mona}. Coordinates: {coords}"
@@ -265,12 +265,24 @@ class Maze:
     def update_walls(self, mona, walls):
         mona_coords = self.get_coords(mona)
 
-        for wall in walls:
-            if wall == DIR_UP:
-                self.maze[mona_coords[0]-1][mona_coords[1]] = WALL_EXPLORED
-            elif wall == DIR_DOWN:
-                self.maze[mona_coords[0]+1][mona_coords[1]] = WALL_EXPLORED
-            elif wall == DIR_LEFT:
-                self.maze[mona_coords[0]][mona_coords[1]-1] = WALL_EXPLORED
-            elif wall == DIR_RIGHT:
-                self.maze[mona_coords[0]][mona_coords[1]+1] = WALL_EXPLORED
+        for direction in [DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN]:
+            if direction in walls:
+                if direction == DIR_UP:
+                    self.maze[mona_coords[0]-1][mona_coords[1]] = WALL_EXPLORED
+                elif direction == DIR_DOWN:
+                    self.maze[mona_coords[0]+1][mona_coords[1]] = WALL_EXPLORED
+                elif direction == DIR_LEFT:
+                    self.maze[mona_coords[0]][mona_coords[1]-1] = WALL_EXPLORED
+                elif direction == DIR_RIGHT:
+                    self.maze[mona_coords[0]][mona_coords[1]+1] = WALL_EXPLORED
+            else:
+                if direction == DIR_UP and self.maze[mona_coords[0]-1][mona_coords[1]] == UNKNOWN:
+                    self.maze[mona_coords[0]-1][mona_coords[1]] = CLEAR
+                elif direction == DIR_DOWN and self.maze[mona_coords[0]+1][mona_coords[1]] == UNKNOWN:
+                    self.maze[mona_coords[0]+1][mona_coords[1]] = CLEAR
+                elif direction == DIR_LEFT and self.maze[mona_coords[0]][mona_coords[1]-1] == UNKNOWN:
+                    self.maze[mona_coords[0]][mona_coords[1]-1] = CLEAR
+                elif direction == DIR_RIGHT and self.maze[mona_coords[0]][mona_coords[1]+1] == UNKNOWN:
+                    self.maze[mona_coords[0]][mona_coords[1]+1] = CLEAR
+
+        self.print()

@@ -74,7 +74,7 @@ class Solver:
         #     return 10000,[]
         
         current_path = []
-        other_mona = (mona + 1) % 2
+        other_mona = MONA2 if mona == MONA1 else MONA1
         other_mona_path = self.mona2_path if mona == MONA1 else self.mona1_path
         available_tiles = [self.expanded_to_index(tile) for tile in self.maze.available_tiles_from_tile(self.index_to_expanded_coords(source_id))]
         if destination_id in available_tiles:
@@ -96,10 +96,13 @@ class Solver:
             return minimum, current_path
         
     def update_distance_matrix(self, mona):
+        print(f"updating MONA{mona}")
+        self.maze.print()
         row, col =  self.expanded_to_grid_coords(self.maze.get_coords(mona))
         mona_index = self.get_matrix_index(row, col)
         self.visited_ids.append(mona_index)
         available_tiles = [self.expanded_to_grid_coords(tile) for tile in self.maze.available_tiles(mona, allow_mona_clash=True)]
+        print(available_tiles)
 
         for available_tile in available_tiles:
             self.distance_matrix[mona_index][self.get_matrix_index(available_tile[0], available_tile[1])] = 1

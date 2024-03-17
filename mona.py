@@ -98,6 +98,7 @@ class MonaUno:
 
 class Mona:
     WALL_THRESH = 995  # Woah! So high!! These gummies hit different
+    WALL_THRESH = 985  # Woah! So high!! These gummies hit different
 
     def __init__(self, uno: MonaUno, id_: int) -> None:
         self.uno: MonaUno = uno
@@ -107,9 +108,20 @@ class Mona:
         self._last_packet: bytes = b""
         self.state: None | MonaState = None
 
+        self.ir_capture = []
+
         self.allow_when_busy: bool = False
 
         self._has_poll_thread: bool = False
+
+    def take_ir_capture(self):
+        if not self._has_poll_thread:
+            raise RuntimeError("take_ir_capture only makes sense when using spawn_poll_thread")
+        ir = []
+        for _ in range(5):
+            ir.append(self.state.ir)
+            time.sleep(0.2)
+        self.ir_capture = [sum(ir[i]) / 5 for i in range(len(ir))]
 
     def spawn_poll_thread(self) -> None:
         if self._has_poll_thread:
@@ -148,6 +160,24 @@ class Mona:
         return self.state.ir[2] < self.WALL_THRESH
 
     @property
+    def wall_cap_left(self) -> bool:
+        if not self.ir_capture:
+            return False
+        return self.ir_capture[0] < self.WALL_THRESH
+
+    @property
+    def wall_cap_right(self) -> bool:
+        if not self.ir_capture:
+            return False
+        return self.ir_capture[4] < self.WALL_THRESH
+
+    @property
+    def wall_cap_front(self) -> bool:
+        if not self.ir_capture:
+            return False
+        return self.ir_capture[2] < self.WALL_THRESH
+
+    @property
     def busy(self) -> bool:
         if self.state is None:
             return False
@@ -178,6 +208,9 @@ class Mona:
         self.uno.com.flush()
 
     def _busy_check(self) -> None:
+        while self.busy:
+            time.sleep(0.1)
+
         if self.allow_when_busy:
             return
         if self.busy:
