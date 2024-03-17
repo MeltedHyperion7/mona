@@ -96,13 +96,13 @@ class Solver:
             return minimum, current_path
         
     def update_distance_matrix(self, mona):
-        print(f"updating MONA{mona}")
-        self.maze.print()
+        # print(f"updating MONA{mona}")
+        # self.maze.print()
         row, col =  self.expanded_to_grid_coords(self.maze.get_coords(mona))
         mona_index = self.get_matrix_index(row, col)
         self.visited_ids.append(mona_index)
         available_tiles = [self.expanded_to_grid_coords(tile) for tile in self.maze.available_tiles(mona, allow_mona_clash=True)]
-        print(available_tiles)
+        # print(available_tiles)
 
         for available_tile in available_tiles:
             self.distance_matrix[mona_index][self.get_matrix_index(available_tile[0], available_tile[1])] = 1
@@ -154,7 +154,7 @@ class Solver:
         mona_index = self.get_mona_index(mona)
         other_mona_target = self.mona2_target if mona == MONA1 else self.mona1_target
 
-        print(f'MONA{mona}:')
+        # print(f'MONA{mona}:')
         best_node = None
         for node_id in range(self.height*self.width):
             if node_id != mona_index and node_id not in self.visited_ids and node_id != other_mona_target:
@@ -171,7 +171,7 @@ class Solver:
             return None
             
         _, path = self.get_shortest_path(mona_index, best_node, [], 0, MIN_TIME, mona)
-        print(f"best_node: {self.get_coords(best_node)}. path: {path}")
+        # print(f"best_node: {self.get_coords(best_node)}. path: {path}")
 
         # allows poping to get next item
         path.reverse()

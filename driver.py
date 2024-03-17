@@ -1,4 +1,5 @@
 from simple_solver import SimpleSolver
+from interrupt_solver import InterruptSolver
 from maze import Maze
 from constants import *
 from mona import *
@@ -104,7 +105,7 @@ def init():
 monas=init()
 maze=Maze()
 maze.make_maze(5, 5)
-solver=SimpleSolver(maze)
+solver=InterruptSolver(maze)
 mona1=MONA(MONA1,DIR_RIGHT,monas[0])
 mona2=MONA(MONA2,DIR_LEFT,monas[1])
 
@@ -114,13 +115,13 @@ def execute_Mona(id, mona:MONA):
     while not mona.mona.busy:
         time.sleep(0.2)
         #If on unexplored cell
-        row, col = solver.maze.get_coords(id)
         #explore cell && update walls
         directions = []
         # mona.mona.take_ir_capture()
+        mona_coords = solver.maze.get_coords(mona.id)
         print(mona.mona.state.ir)
         print(mona.mona.ir_capture)
-        print(f'MONA{mona.id}. orientation: {mona.orientation}')
+        print(f'MONA{mona.id}. Coordinates: {solver.expanded_to_grid_coords(mona_coords)}. orientation: {mona.orientation}')
         if mona.mona.wall_left:
             directions.append(mona.conver_direction(DIR_LEFT))
             # solver.update_walls(mona.id,mona.conver_direction(DIR_LEFT))
@@ -136,6 +137,7 @@ def execute_Mona(id, mona:MONA):
         cmd = solver.solve(mona.id)
         print(f'Mona {mona.id} command: {cmd}')
         if cmd is None:
+            solver.maze.print()
             quit()
         #Turn to face the cell
         mona.face_towards(cmd)

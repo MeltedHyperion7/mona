@@ -30,8 +30,11 @@ if __name__ == '__main__':
         time_since_move += time_delta
 
         if not explored and time_since_move > 2000:
+            solver.maze.update_walls_virt(MONA1)
             solver.solve(MONA1)
+            solver.maze.update_walls_virt(MONA2)
             solver.solve(MONA2)
+            
             total_moves += 1
             print(f"STEP {total_moves}")
             time_since_move = 0
