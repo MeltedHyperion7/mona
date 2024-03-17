@@ -97,36 +97,43 @@ class SimpleSolver(Solver):
             mona_path.append((r, c))
             return None
 
-        # TODO what if they come head on towards each other
-        return False
-    
-    def solve(self):
-        #Explore Current cell & shortest distances & paths to every unexplored cell
-        # self.pretty_print_matrix()
+    def update_walls(self, mona, walls):
+        self.maze.update_walls(self, mona, walls)
 
+    def solve(self, mona):
         if self.get_mona_index(MONA1) not in self.visited_ids:
             self.update_distance_matrix(MONA1)
         if self.get_mona_index(MONA2) not in self.visited_ids:
             self.update_distance_matrix(MONA2)
 
-        mona1_action = None
-        mona2_action = None
-        if self.has_path(MONA1):
-            mona1_action = self.move_next(MONA1)
-        else:
-            target = self.get_next_explore_target(MONA1)
-            if self.has_path(MONA1):
-                mona1_action = self.move_next(MONA1)
-            else:
-                print(f"No target for MONA1")
-                
-        if self.has_path(MONA2):
-            mona2_action = self.move_next(MONA2)
-        else:
-            target = self.get_next_explore_target(MONA2)
-            if self.has_path(MONA2):
-                mona2_action = self.move_next(MONA2)
-            else:
-                print(f"No target for MONA2")
+        mona_action = None
 
-        return (mona1_action, mona2_action)
+        if mona == MONA1:
+            if self.has_path(MONA1):
+                self.mona1_last_action = mona_action = self.move_next(MONA1)
+            else:
+                target = self.get_next_explore_target(MONA1)
+                if self.has_path(MONA1):
+                    self.mona1_last_action = mona_action = self.move_next(MONA1)
+                else:
+                    print(f"No target for MONA1")
+        else:
+            if self.has_path(MONA2):
+                self.mona2_last_action = mona_action = self.move_next(MONA2)
+            else:
+                target = self.get_next_explore_target(MONA2)
+                if self.has_path(MONA2):
+                    self.mona2_last_action = mona_action = self.move_next(MONA2)
+                else:
+                    print(f"No target for MONA2")
+
+        # flipped order to counter deadlocks
+        if self.mona1_last_action == None and self.mona2_last_action == None:
+            self.mona1_target = None
+            self.mona1_path = []
+            self.mona2_target = None
+            self.mona2_path = []
+            self.get_next_explore_target(MONA2)
+            self.get_next_explore_target(MONA1)
+
+        return mona_action
