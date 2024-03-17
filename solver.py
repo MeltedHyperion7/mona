@@ -27,7 +27,8 @@ class Solver:
         self.mona2_target = None
         self.mona1_path = []
         self.mona2_path = []
-        
+        self.mona1_last_action = None
+        self.mona2_last_action = None
 
     def get_matrix_index(self, row, col):
         return row * self.width + col

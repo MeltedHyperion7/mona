@@ -5,7 +5,7 @@ import pygame
 import random
 
 from solver import Solver
-from simple_solver import SimpleSolver
+from interrupt_solver import InterruptSolver
 
 if __name__ == '__main__':
     dimension = 5
@@ -23,14 +23,15 @@ if __name__ == '__main__':
     explored = False
     time_since_move = 0
     total_moves = 0
-    solver = SimpleSolver(maze)
+    solver = InterruptSolver(maze)
 
     while running:
         time_delta = clock.tick(60)
         time_since_move += time_delta
 
         if not explored and time_since_move > 2000:
-            solver.solve()
+            solver.solve(MONA1)
+            solver.solve(MONA2)
             total_moves += 1
             print(f"STEP {total_moves}")
             time_since_move = 0
