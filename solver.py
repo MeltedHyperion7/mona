@@ -93,7 +93,7 @@ class Solver:
             return minimum, current_path
         
     def update_distance_matrix(self, mona):
-        row, col = self.maze.get_coords(mona)
+        row, col =  self.expanded_to_grid_coords(self.maze.get_coords(mona))
         mona_index = self.get_matrix_index(row, col)
         self.visited_ids.append(mona_index)
         available_tiles = [self.expanded_to_grid_coords(tile) for tile in self.maze.available_tiles(mona, allow_mona_clash=True)]
@@ -114,14 +114,21 @@ class Solver:
         r, c = next
         monar, monac = self.maze.get_coords(mona)
 
-        if monar > r:
+        if monar > r and self.maze.can_move(mona, DIR_UP):
             self.maze.move_mona(mona, DIR_UP)
-        elif monar < r:
+            return True
+        elif monar < r and self.maze.can_move(mona, DIR_DOWN):
             self.maze.move_mona(mona, DIR_DOWN)
-        if monac > c:
+            return True
+        elif monac > c and self.maze.can_move(mona, DIR_LEFT):
             self.maze.move_mona(mona, DIR_LEFT)
-        elif monac < c:
+            return True
+        elif monac < c and self.maze.can_move(mona, DIR_RIGHT):
             self.maze.move_mona(mona, DIR_RIGHT)
+            return True
+
+        # TODO what if they come head on towards each other
+        return False
 
     def pretty_print_distances(self, distances):
         for i in range(self.height):

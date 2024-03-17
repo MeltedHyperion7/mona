@@ -5,6 +5,7 @@ import pygame
 import random
 
 from solver import Solver
+from simple_solver import SimpleSolver
 
 if __name__ == '__main__':
     dimension = 5
@@ -22,7 +23,7 @@ if __name__ == '__main__':
     explored = False
     time_since_move = 0
     total_moves = 0
-    solver=Solver(maze)
+    solver = SimpleSolver(maze)
 
     while running:
         time_delta = clock.tick(60)

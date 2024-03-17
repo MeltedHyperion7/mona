@@ -253,6 +253,6 @@ class Maze:
     
     def get_coords(self, mona):
         if mona == MONA1:
-            return self.mona1[0] // 2, self.mona1[1] // 2
+            return self.mona1[0], self.mona1[1]
         else:
-            return self.mona2[0] // 2, self.mona2[1] // 2
+            return self.mona2[0], self.mona2[1]
