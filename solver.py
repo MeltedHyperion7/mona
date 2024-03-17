@@ -15,6 +15,7 @@ class Node:
         node.neighbours.append(self)
         node.dist.append(dist)
 
+
 class Solver:
     def __init__(self, maze: Maze) -> None:
         self.maze = maze
@@ -26,6 +27,7 @@ class Solver:
         self.mona2_target = None
         self.mona1_path = []
         self.mona2_path = []
+        
 
     def get_matrix_index(self, row, col):
         return row * self.width + col
