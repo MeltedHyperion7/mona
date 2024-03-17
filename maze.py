@@ -5,24 +5,12 @@ import pygame
 from pygame import Rect
 import random
 
-class Node:
-    def __init__(self,id) -> None:
-        self.neighbours=[]
-        self.dist=[]
-        self.id=id
-
-    def add_neighbour(self,node,dist):
-        self.neighbours.append(node)
-        self.dist.append(dist)
-        node.neighbours.append(self)
-        node.dist.append(dist)
 class Maze:
     def isWall(self,row,col):
         tile= self.maze[row][col]
         if tile==WALL_UNEXPLORED or tile==WALL_EXPLORED_1 or tile==WALL_EXPLORED_2:
             return True
         return False
-        
     
 
     def __init__(self) -> None:
@@ -31,20 +19,6 @@ class Maze:
         self.width = 0
         self.mona1 = [0, 0]
         self.mona2 = [0, 0]
-        self.nodes=[]
-
-    def get_shortest_distance(source:Node,destination:Node,visited:[]):
-        if destination in source.neighbours:
-            return source.dist[source.neighbours.index(destination)]
-        else:
-            minimum=10000
-            for neighbour in source.neighbours:
-                if neighbour not in visited:
-                    visited.append(neighbour)
-                    x=get_shortest_distance(neighbour,destination,visited)
-                    if x<minimum:
-                        minimum=x
-            return minimum
 
     def is_maze_correct(self):
         accessible = {}
@@ -107,36 +81,6 @@ class Maze:
                         if not self.is_maze_correct():
                             self.maze[i][j] = UNKNOWN
 
-    def make_maze_graph(self):
-        icounter=0
-        for i in range(1,2*self.height,2):
-
-            self.nodes.append([])
-            jcounter=0
-            for j in range(1,2*self.width,2):
-                node=Node(icounter*self.height+jcounter)
-                #Add left neighbour
-
-                if jcounter!=0:
-                    if self.maze[i][j-1]!=WALL_UNEXPLORED:
-                        node.add_neighbour(self.nodes[icounter][jcounter-1],1)
-                    else:
-                        node.add_neighbour(self.nodes[icounter][jcounter-1],-1)
-                #Add top neighbour
-                if icounter!=0:
-                    if self.maze[i-1][j]!=WALL_UNEXPLORED:
-                        node.add_neighbour(self.nodes[icounter-1][jcounter],1)
-                    else:
-                        node.add_neighbour(self.nodes[icounter-1][jcounter],-1)
-                self.nodes[icounter].append(node)
-                jcounter+=1
-            icounter+=1
-
-    def init_graph(self):
-        step_weight=self.height
-        for node_line,i in enumerate(self.nodes):
-            for node, j in enumerate(node_line):
-
     def print(self):
         for row in self.maze:
             for c in row:
@@ -156,6 +100,7 @@ class Maze:
 
         self.mona1 = [1, 1]
         self.mona2 = [2*height-1, 2*width-1]
+    
 
     def draw(self, screen):
         screen.fill(WHITE)
@@ -196,7 +141,7 @@ class Maze:
             if coords[0] - 2 > 0:
                 # if self.maze[coords[0] - 1] == UNKNOWN:
                 #     return False, f"Moving UP through UNKNOWN. Mona: {mona}. Coordinates: {coords}"
-                if self.isWall(coords[0] - 1,coords[1]):
+                if self.isWall(coords[0] - 1, coords[1]):
                     return False, f"Moving UP through WALL. Mona: {mona}. Coordinates: {coords}"
                 elif not allow_mona_clash and self.maze[coords[0] - 2][coords[1]] in [MONA1, MONA2]:
                     return False, f"Moving UP crashed into other mona. Mona: {mona}. Coordinates: {coords}"
@@ -206,7 +151,7 @@ class Maze:
             else:
                 return False, f"Moving UP out of bounds. Mona: {mona}. Coordinates: {coords}"
                 
-        if direction == DIR_DOWN:
+        elif direction == DIR_DOWN:
             if coords[0] + 2 < 2 * self.height + 1:
                 # if self.maze[coords[0] + 1] == UNKNOWN:
                 #     return False, f"Moving DOWN through UNKNOWN. Mona: {mona}. Coordinates: {coords}"
@@ -219,7 +164,7 @@ class Maze:
                 
             else:
                 return False, f"Moving DOWN out of bounds. Mona: {mona}. Coordinates: {coords}"
-        if direction == DIR_LEFT:
+        elif direction == DIR_LEFT:
             if coords[1] - 2 > 0:
                 # if self.maze[coords[1] - 1] == UNKNOWN:
                 #     return False, f"Moving LEFT through UNKNOWN. Mona: {mona}. Coordinates: {coords}"
@@ -232,7 +177,7 @@ class Maze:
                 
             else:
                 return False, f"Moving LEFT out of bounds. Mona: {mona}. Coordinates: {coords}"
-        if direction == DIR_RIGHT:
+        elif direction == DIR_RIGHT:
             if coords[1] + 2 < 2*self.width + 1:
                 # if self.maze[coords[1] + 1] == UNKNOWN:
                 #     return False, f"Moving RIGHT through UNKNOWN. Mona: {mona}. Coordinates: {coords}"
@@ -248,8 +193,6 @@ class Maze:
                 
     def move_mona(self, mona, direction):
         mona_coords = self.mona1 if mona == MONA1 else self.mona2
-        other_mona = (mona + 1) % 2
-
         move_possible, reason = self.can_move(mona, direction)
 
         if not move_possible:
@@ -287,3 +230,9 @@ class Maze:
                     return False
                 
         return True
+    
+    def get_coords(self, mona):
+        if mona == MONA1:
+            return self.mona1[0] // 2, self.mona1[1] // 2
+        else:
+            return self.mona2[0] // 2, self.mona2[1] // 2
