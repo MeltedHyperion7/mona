@@ -26,7 +26,6 @@ class Solver:
         self.mona2_target = None
         self.mona1_path = []
         self.mona2_path = []
-        self.path=[{},{}]
 
     def get_matrix_index(self, row, col):
         return row * self.width + col
@@ -97,7 +96,7 @@ class Solver:
         row, col = self.maze.get_coords(mona)
         mona_index = self.get_matrix_index(row, col)
         self.visited_ids.append(mona_index)
-        available_tiles = [(tile[0] // 2, tile[1] // 2) for tile in self.maze.available_tiles(mona, allow_mona_clash=True)]
+        available_tiles = [self.expanded_to_grid_coords(tile) for tile in self.maze.available_tiles(mona, allow_mona_clash=True)]
 
         for available_tile in available_tiles:
             self.distance_matrix[mona_index][self.get_matrix_index(available_tile[0], available_tile[1])] = 1
@@ -130,28 +129,36 @@ class Solver:
                 print('i' if distances[self.get_matrix_index(i,j)] == float('inf') else distances[self.get_matrix_index(i,j)], end=" ")
             print()
 
+    def pretty_print_matrix(self):
+        for i in range(self.height*self.width):
+            for j in range(self.height*self.width):
+                print('i' if self.distance_matrix[i][j] == float('inf') else self.distance_matrix[i][j], end=" ")
+            print()
+
     def get_next_explore_target(self, mona): 
         min_dist_to_travel=float("inf")
         best_node = self.maze.get_coords(mona)# Best thing to do is to stay in place
         mona_index = self.get_mona_index(mona)
         other_mona_target = self.mona2_target if mona == MONA1 else self.mona1_target
 
+        print(f'MONA{mona}:')
         best_node = None
         for node_id in range(self.height*self.width):
             if node_id != mona_index and node_id not in self.visited_ids and node_id != other_mona_target:
+
+                print(f'{self.get_coords(node_id)}: {self.distance_matrix[mona_index][node_id]}. best: {min_dist_to_travel}')
                 dist = self.distance_matrix[mona_index][node_id]
                 if dist < min_dist_to_travel:
+                    min_dist_to_travel = dist
                     best_node = node_id
 
-        print(f'MONA{mona}:')
         self.pretty_print_distances(self.distance_matrix[self.get_mona_index(mona)])
 
         if best_node == None:
             return None
             
-        _, path = self.get_shortest_path(mona_index, best_node, [], 0, 2, mona)
-        print(f"best_node: {best_node}. path: {path}")
-        self.path = [{}, {}]
+        _, path = self.get_shortest_path(mona_index, best_node, [], 0, MIN_TIME, mona)
+        print(f"best_node: {self.get_coords(best_node)}. path: {path}")
 
         # allows poping to get next item
         path.reverse()
@@ -170,6 +177,8 @@ class Solver:
 
     def solve(self):
         #Explore Current cell & shortest distances & paths to every unexplored cell
+        # self.pretty_print_matrix()
+
         if self.get_mona_index(MONA1) not in self.visited_ids:
             self.update_distance_matrix(MONA1)
         if self.get_mona_index(MONA2) not in self.visited_ids:
@@ -179,7 +188,7 @@ class Solver:
             self.move_next(MONA1, self.mona1_path.pop())
         else:
             target = self.get_next_explore_target(MONA1)
-            if target is not None:
+            if target is not None and self.has_path(MONA1):
                 self.move_next(MONA1, self.mona1_path.pop())
             else:
                 print(f"No target for MONA1")
@@ -188,15 +197,11 @@ class Solver:
             self.move_next(MONA2, self.mona2_path.pop())
         else:
             target = self.get_next_explore_target(MONA2)
-            if target is not None:
+            if target is not None and self.has_path(MONA2):
                 self.move_next(MONA2, self.mona2_path.pop())
             else:
                 print(f"No target for MONA2")
 
-        #Move one more step towards the closes unexplored cell
-        # self.maze.move_mona(MONA1, self.get_next_step_to(MONA1, self.get_next_explore_target(MONA1)))
-        # self.maze.move_mona(MONA2, self.get_next_step_to(MONA2, self.get_next_explore_target(MONA2)))
-        
 
         
         
