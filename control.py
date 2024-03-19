@@ -26,7 +26,7 @@ monas = [
     Mona(uno, 0),
     Mona(uno, 1),
 ]
-monas[CONTROL_MONA].spawn_poll_thread()
+monas[0].spawn_poll_thread()
 monas[1].spawn_poll_thread()
 
 while True:
@@ -52,23 +52,23 @@ while True:
     screen.blit(font.render(str(round(xp, 1)), (0, 0, 0), 1), (100, 132))
     screen.blit(font.render(str(round(yp, 1)), (0, 0, 0), 1), (100, 164))
 
-    if monas[CONTROL_MONA].wall_left:
+    if monas[0].wall_left:
         pygame.draw.rect(screen, (255, 0, 0), (0, 0, 20, 300))
-    if monas[CONTROL_MONA].wall_right:
+    if monas[0].wall_right:
         pygame.draw.rect(screen, (255, 0, 0), (280, 0, 20, 300))
-    if monas[CONTROL_MONA].wall_front:
+    if monas[0].wall_front:
         pygame.draw.rect(screen, (255, 0, 0), (0, 0, 300, 20))
 
     pygame.display.flip()
 
-    if monas[CONTROL_MONA].state is not None:
+    if monas[0].state is not None:
         # print(packet)
-        if monas[CONTROL_MONA].state.source == CONTROL_MONA:
-            ir = monas[CONTROL_MONA].state.ir
-            state = monas[CONTROL_MONA].state.state
-            angle = monas[CONTROL_MONA].state.angle_radians
-            xp = monas[CONTROL_MONA].state.world_x
-            yp = monas[CONTROL_MONA].state.world_y
+        if monas[0].state.source == CONTROL_MONA:
+            ir = monas[0].state.ir
+            state = monas[0].state.state
+            angle = monas[0].state.angle_radians
+            xp = monas[0].state.world_x
+            yp = monas[0].state.world_y
 
             print(ir)
 
